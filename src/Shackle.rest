@@ -1,0 +1,29 @@
+@url = http://localhost:5000
+@name = user1
+
+###
+GET {{url}}/accounts
+
+###
+GET {{url}}/accounts/{{name}}
+
+###
+GET {{url}}/blockchain
+
+###
+POST {{url}}/accounts
+Content-Type: application/json
+
+{
+    "name": "piotr"
+}
+
+###
+POST {{url}}/transfers
+Content-Type: application/json
+
+{
+    "Sender": "user1",
+    "Receiver": "user2",
+    "Amount": 20
+}

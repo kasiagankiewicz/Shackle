@@ -1,0 +1,18 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Cryptography.ECDSA.Secp256K1" Version="1.1.2" />
+    <PackageReference Include="Newtonsoft.Json" Version="12.0.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Remove="Libs\secp256k1.dll" />
+    <None Remove="Libs\libsecp256k1.so" />
+    <None Remove="Libs\libsecp256k1.dylib" />
+  </ItemGroup>
+
+</Project>
