@@ -39,6 +39,18 @@ namespace Shackle.Host.Controllers
             return new AccountDetailsDto(account);
         }
         
+        [HttpGet("blockchain/{index}")]
+        public ActionResult<BlockDto> GetBlock(int index)
+        {
+            var block = _blockchainRunner.Get(index);
+            if (block is null)
+            {
+                return NotFound();
+            }
+
+            return new BlockDto(block);
+        }
+        
         [HttpGet("blockchain")]
         public ActionResult<BlockchainDto> GetBlockchain()
         {

@@ -1,5 +1,6 @@
 @url = http://localhost:5000
 @name = user1
+@index = 2
 
 ###
 GET {{url}}/accounts
@@ -9,6 +10,9 @@ GET {{url}}/accounts/{{name}}
 
 ###
 GET {{url}}/blockchain
+
+###
+GET {{url}}/blockchain/{{index}}
 
 ###
 POST {{url}}/accounts

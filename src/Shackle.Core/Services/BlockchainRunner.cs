@@ -24,6 +24,9 @@ namespace Shackle.Core.Services
             accountService.Create("user1");
             accountService.Create("user2");
         }
+        
+        public Block Get(int index)
+            => Blockchain.Blocks.SingleOrDefault(b => b.Index == index);
 
         public async Task StartAsync()
         {
