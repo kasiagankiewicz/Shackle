@@ -21,12 +21,15 @@ namespace Shackle.Core.Services
         {
             _signer = signer;
             Blockchain = new Blockchain(hashGenerator, hashInputProvider);
-            accountService.Create("user1");
-            accountService.Create("user2");
+            accountService.Join("user1");
+            accountService.Join("user2");
         }
         
-        public Block Get(int index)
+        public Block GetBlock(int index)
             => Blockchain.Blocks.SingleOrDefault(b => b.Index == index);
+
+        public Block GetLastBlock()
+            => Blockchain.Blocks.LastOrDefault();
 
         public async Task StartAsync()
         {
@@ -40,11 +43,7 @@ namespace Shackle.Core.Services
             {
                 ProcessTransactions();
                 Console.WriteLine($"Pending transaction: {Blockchain.PendingTransactions.Count()}");
-                var stopWatch = new Stopwatch();
-                stopWatch.Start();
                 Blockchain.Mine(_miner);
-                stopWatch.Stop();
-                Console.WriteLine($"Completed in {stopWatch.ElapsedMilliseconds} ms");
                 Console.WriteLine(Blockchain.Blocks.Last());
                 await Task.Delay(5000);
             }
@@ -73,6 +72,14 @@ namespace Shackle.Core.Services
             var transaction = new Transaction(sender, receiver, amount, signature);
             _transactions.Enqueue(transaction);
         }
+
+        public void SetDifficulty(int difficulty)
+        {
+            Blockchain.SetDifficulty(difficulty);
+        }
+
+        public int GetDifficulty()
+            => Blockchain.Difficulty;
     }
 }
     

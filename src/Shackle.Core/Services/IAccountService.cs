@@ -7,6 +7,6 @@ namespace Shackle.Core.Services
     {
         IEnumerable<Account> GetAll();
         Account Get(string name);
-        void Create(string name, long balance = 100);
+        void Join(string name, long balance = 100);
     }
 }

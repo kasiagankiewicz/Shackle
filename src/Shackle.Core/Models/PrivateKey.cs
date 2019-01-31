@@ -13,6 +13,6 @@ namespace Shackle.Core.Models
         }
 
         public override string ToString()
-            => $"{string.Join(string.Empty, Bytes.Select(b => b.ToString("X2")))}";
+            => $"{string.Join(string.Empty, Bytes.Select(b => b.ToString("X2"))).ToLowerInvariant()}";
     }
 }

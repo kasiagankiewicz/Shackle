@@ -13,6 +13,7 @@ namespace Shackle.Core.Dto
         public IEnumerable<TransactionDto> Transactions { get; set; }
         public DateTime Timestamp { get; set; }
         public int Nonce { get; set; }
+        public long MiningTime { get; set; }
 
         public BlockDto()
         {
@@ -26,6 +27,7 @@ namespace Shackle.Core.Dto
             Transactions = block.Transactions.Select(t => new TransactionDto(t));
             Timestamp = block.Timestamp;
             Nonce = block.Nonce;
+            MiningTime = block.MiningTime;
         }
     }
 }

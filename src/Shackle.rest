@@ -15,6 +15,9 @@ GET {{url}}/blockchain
 GET {{url}}/blockchain/{{index}}
 
 ###
+GET {{url}}/blockchain/last
+
+###
 POST {{url}}/accounts
 Content-Type: application/json
 

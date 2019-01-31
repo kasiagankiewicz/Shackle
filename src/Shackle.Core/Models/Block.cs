@@ -12,9 +12,10 @@ namespace Shackle.Core.Models
         public IEnumerable<Transaction> Transactions { get; }
         public DateTime Timestamp { get; }
         public int Nonce { get; }
+        public long MiningTime { get; }        
 
         private Block(int index, string previousHash, string hash,
-            IEnumerable<Transaction> transactions, DateTime timestamp, int nonce)
+            IEnumerable<Transaction> transactions, DateTime timestamp, int nonce, long miningTime)
         {
             Index = index;
             PreviousHash = previousHash;
@@ -22,15 +23,17 @@ namespace Shackle.Core.Models
             Transactions = transactions;
             Timestamp = timestamp;
             Nonce = nonce;
+            MiningTime = miningTime;
         }
 
         public override string ToString()
             => $"Block: {Index}{Environment.NewLine}Hash: {Hash}{Environment.NewLine}Timestamp: {Timestamp}" +
                $"{Environment.NewLine}Transactions:{Environment.NewLine}" +
-               $"{JsonConvert.SerializeObject(Transactions, Formatting.Indented)}";
+               $"{JsonConvert.SerializeObject(Transactions, Formatting.Indented)}" +
+               $"{Environment.NewLine}Nonce: {Nonce}{Environment.NewLine}Time: {MiningTime} ms";
 
         public static Block Create(int index, string previousHash, string hash,
-            IEnumerable<Transaction> transactions, DateTime timestamp, int nonce)
-            => new Block(index, previousHash, hash, transactions, timestamp, nonce);
+            IEnumerable<Transaction> transactions, DateTime timestamp, int nonce, long time)
+            => new Block(index, previousHash, hash, transactions, timestamp, nonce, time);
     }
 }

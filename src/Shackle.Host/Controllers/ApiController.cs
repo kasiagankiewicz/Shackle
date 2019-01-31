@@ -39,10 +39,10 @@ namespace Shackle.Host.Controllers
             return new AccountDetailsDto(account);
         }
         
-        [HttpGet("blockchain/{index}")]
+        [HttpGet("blockchain/blocks/{index}")]
         public ActionResult<BlockDto> GetBlock(int index)
         {
-            var block = _blockchainRunner.Get(index);
+            var block = _blockchainRunner.GetBlock(index);
             if (block is null)
             {
                 return NotFound();
@@ -56,11 +56,29 @@ namespace Shackle.Host.Controllers
         {
             return new BlockchainDto(_blockchainRunner.Blockchain);
         }
+        
+        [HttpGet("blockchain/blocks/last")]
+        public ActionResult<BlockDto> GetLastBlock()
+        {
+            var block = _blockchainRunner.GetLastBlock();
+            if (block is null)
+            {
+                return NotFound();
+            }
+
+            return new BlockDto(block);
+        }
+        
+        [HttpGet("blockchain/difficulty")]
+        public ActionResult<int> GetDifficulty()
+        {
+            return _blockchainRunner.GetDifficulty();
+        }
 
         [HttpPost("accounts")]
-        public ActionResult Post(CreateAccount request)
+        public ActionResult Post(Join request)
         {
-            _accountService.Create(request.Name, request.Balance ?? 100);
+            _accountService.Join(request.Name, request.Balance ?? 100);
             return CreatedAtAction(nameof(Get), new {name = request.Name}, null);
         }
 
@@ -86,6 +104,18 @@ namespace Shackle.Host.Controllers
             var receiver = _accountService.Get(request.Receiver);
             _blockchainRunner.CreateTransfer(sender, receiver, request.Amount);
 
+            return Ok();
+        }
+
+        [HttpPut("blockchain/difficulty/{difficulty}")]
+        public ActionResult Put(int difficulty)
+        {
+            if (difficulty <= 0)
+            {
+                return NotFound();
+            }
+            
+            _blockchainRunner.SetDifficulty(difficulty);
             return Ok();
         }
     }
