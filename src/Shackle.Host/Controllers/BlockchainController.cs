@@ -1,7 +1,4 @@
-using System.Collections.Generic;
-using System.Linq;
 using Microsoft.AspNetCore.Mvc;
-using Shackle.Services.Accounts;
 using Shackle.Services.Blockchain;
 using Shackle.Services.Dto;
 using Shackle.Services.Requests;
@@ -19,7 +16,7 @@ namespace Shackle.Host.Controllers
             _blockchainService = blockchainService;
         }
 
-        [HttpGet("blockchain/blocks/{index}")]
+        [HttpGet("blocks/{index}")]
         public ActionResult<BlockDto> GetBlock(int index)
         {
             var block = _blockchainService.GetBlock(index);
@@ -28,68 +25,50 @@ namespace Shackle.Host.Controllers
                 return NotFound();
             }
 
-            return new BlockDto(block);
+            return block;
         }
-        
-        [HttpGet("blockchain")]
+
+        [HttpGet()]
         public ActionResult<BlockchainDto> GetBlockchain()
         {
-            return new BlockchainDto(_blockchainService.Blockchain);
+            var blockchain = _blockchainService.GetBlockchain();
+            if (blockchain is null)
+            {
+                return NotFound();
+            }
+
+            return blockchain;
         }
-        
-        [HttpGet("blockchain/blocks/last")]
-        public ActionResult<BlockDto> GetLastBlock()
+
+        [HttpGet("blocks/current")]
+        public ActionResult<BlockDto> GetCurrentBlock()
         {
-            var block = _blockchainService.GetLastBlock();
+            var block = _blockchainService.GetCurrentBlock();
             if (block is null)
             {
                 return NotFound();
             }
 
-            return new BlockDto(block);
+            return block;
         }
-        
-        [HttpGet("blockchain/difficulty")]
-        public ActionResult<int> GetDifficulty()
+
+        [HttpGet("difficulty")]
+        public ActionResult<int> GetDifficulty() => _blockchainService.GetDifficulty();
+
+        [HttpPost("transactions")]
+        public ActionResult Post(CreateTransaction request)
         {
-            return _blockchainService.GetDifficulty();
+            _blockchainService.CreateTransaction(request.Sender, request.Receiver, request.Amount);
+
+            return NoContent();
         }
 
-        [HttpPost("transfers")]
-        public ActionResult Post(CreateTransfer request)
-        {
-            if (request.Sender is null)
-            {
-                return NotFound();
-            }
-
-            if (request.Receiver is null)
-            {
-                return NotFound();
-            }
-
-            if (request.Amount <= 0)
-            {
-                return NotFound();
-            }
-
-            var sender = _accountService.Get(request.Sender);
-            var receiver = _accountService.Get(request.Receiver);
-            _blockchainService.CreateTransaction(sender, receiver, request.Amount);
-
-            return Ok();
-        }
-
-        [HttpPut("blockchain/difficulty/{difficulty}")]
+        [HttpPut("difficulty/{difficulty}")]
         public ActionResult Put(int difficulty)
         {
-            if (difficulty <= 0)
-            {
-                return NotFound();
-            }
-            
             _blockchainService.SetDifficulty(difficulty);
-            return Ok();
+
+            return NoContent();
         }
     }
 }

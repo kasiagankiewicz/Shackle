@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using Shackle.Core.Models;
 
 namespace Shackle.Services.Dto
 {
@@ -13,7 +14,7 @@ namespace Shackle.Services.Dto
         {
         }
 
-        public BlockchainDto(Core.Models.Blockchain blockchain)
+        public BlockchainDto(IBlockchain blockchain)
         {
             Difficulty = blockchain.Difficulty;
             Blocks = blockchain.Blocks.Select(b => new BlockDto(b));

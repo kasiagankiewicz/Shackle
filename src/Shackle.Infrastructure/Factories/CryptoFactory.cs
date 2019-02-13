@@ -1,8 +1,9 @@
 using System.Linq;
 using Cryptography.ECDSA;
+using Shackle.Core.Factories;
 using Shackle.Core.Models;
 
-namespace Shackle.Core.Factories
+namespace Shackle.Infrastructure.Factories
 {
     public class CryptoFactory : ICryptoFactory
     {

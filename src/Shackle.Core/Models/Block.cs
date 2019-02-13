@@ -12,10 +12,10 @@ namespace Shackle.Core.Models
         public IEnumerable<Transaction> Transactions { get; }
         public DateTime Timestamp { get; }
         public int Nonce { get; }
-        public long MiningTime { get; }        
+        public long MiningTime { get; private set; }
 
         private Block(int index, string previousHash, string hash,
-            IEnumerable<Transaction> transactions, DateTime timestamp, int nonce, long miningTime)
+            IEnumerable<Transaction> transactions, DateTime timestamp, int nonce)
         {
             Index = index;
             PreviousHash = previousHash;
@@ -23,7 +23,6 @@ namespace Shackle.Core.Models
             Transactions = transactions;
             Timestamp = timestamp;
             Nonce = nonce;
-            MiningTime = miningTime;
         }
 
         public override string ToString()
@@ -33,7 +32,17 @@ namespace Shackle.Core.Models
                $"{Environment.NewLine}Nonce: {Nonce}{Environment.NewLine}Time: {MiningTime} ms";
 
         public static Block Create(int index, string previousHash, string hash,
-            IEnumerable<Transaction> transactions, DateTime timestamp, int nonce, long time)
-            => new Block(index, previousHash, hash, transactions, timestamp, nonce, time);
+            IEnumerable<Transaction> transactions, DateTime timestamp, int nonce)
+            => new Block(index, previousHash, hash, transactions, timestamp, nonce);
+
+        public void SetMiningTime(long miningTime)
+        {
+            if (miningTime < 0)
+            {
+                throw new ArgumentException("Mining time cannot be less than 0.", nameof(miningTime));
+            }
+
+            MiningTime = miningTime;
+        }
     }
 }

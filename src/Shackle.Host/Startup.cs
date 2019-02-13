@@ -3,12 +3,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
-using Shackle.Core.Factories;
-using Shackle.Core.Factories.Hash;
 using Shackle.Infrastructure;
-using Shackle.Services.Accounts;
-using Shackle.Services.Blockchain;
-using Shackle.Services.Crypto;
 
 namespace Shackle.Host
 {

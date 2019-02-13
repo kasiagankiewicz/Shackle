@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Cryptography.ECDSA;
 using Shackle.Core.Models;
-using Shackle.Services.Crypto;
+using Shackle.Core.Services;
 
 namespace Shackle.Infrastructure.Crypto
 {

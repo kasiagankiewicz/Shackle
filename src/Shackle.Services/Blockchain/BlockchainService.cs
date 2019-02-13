@@ -1,83 +1,114 @@
 using System;
-using System.Collections.Concurrent;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
-using Shackle.Core.Factories.Hash;
+using Microsoft.Extensions.Logging;
+using Shackle.Core.Factories;
 using Shackle.Core.Models;
-using Shackle.Services.Accounts;
-using Shackle.Services.Crypto;
+using Shackle.Core.Repositories;
+using Shackle.Core.Services;
+using Shackle.Services.Dto;
 
 namespace Shackle.Services.Blockchain
 {
     public class BlockchainService : IBlockchainService
     {
+        private IBlockchain _blockchain;
+        private readonly IBlockchainFactory _blockchainFactory;
+        private readonly ITransactionService _transactionService;
+        private readonly IAccountRepository _accountRepository;
         private readonly ISigner _signer;
+        private readonly ILogger<BlockchainService> _logger;
         private bool _isRunning;
-        private readonly ConcurrentQueue<Transaction> _transactions = new ConcurrentQueue<Transaction>();
         private readonly Miner _miner = new Miner("miner1");
-        public Core.Models.Blockchain Blockchain { get; }
+        private readonly Stopwatch _watch = new Stopwatch();
 
-        public BlockchainService(IHashGenerator hashGenerator, IHashInputProvider hashInputProvider,
-            IAccountService accountService, ISigner signer)
+        public BlockchainService(IBlockchainFactory blockchainFactory,
+            ITransactionService transactionService,
+            IAccountRepository accountRepository,
+            ISigner signer,
+            ILogger<BlockchainService> logger)
         {
+            _blockchainFactory = blockchainFactory;
+            _transactionService = transactionService;
+            _accountRepository = accountRepository;
             _signer = signer;
-            Blockchain = new Core.Models.Blockchain(hashGenerator, hashInputProvider);
-            accountService.Join("Franek");
-            accountService.Join("Piotr");
+            _logger = logger;
         }
-        
-        public Block GetBlock(int index) => Blockchain.Blocks.SingleOrDefault(b => b.Index == index);
 
-        public Block GetLastBlock() => Blockchain.Blocks.LastOrDefault();
+
+        public BlockchainDto GetBlockchain() => _blockchain is null ? null : new BlockchainDto(_blockchain);
+
+        public BlockDto GetBlock(int index)
+            => MapBlockDto(() => _blockchain.Blocks.SingleOrDefault(b => b.Index == index));
+
+        public BlockDto GetCurrentBlock()
+            => MapBlockDto(() => _blockchain.CurrentBlock);
+
+        private BlockDto MapBlockDto(Func<Block> blockAccessor)
+        {
+            var block = blockAccessor();
+
+            return block is null ? null : new BlockDto(block);
+        }
 
         public async Task StartAsync()
         {
-            Console.WriteLine("Starting Blockchain...");
-            Blockchain.SetDifficulty(2);
-            Blockchain.CreateGenesisBlock();
-            Console.WriteLine($"Difficulty: {Blockchain.Difficulty}");
+            _blockchain = _blockchainFactory.Create();
+            _logger.LogInformation("Starting Blockchain...");
+            _logger.LogInformation($"Difficulty: {_blockchain.Difficulty}");
 
             _isRunning = true;
             while (_isRunning)
             {
-                ProcessTransactions();
-                Console.WriteLine($"Pending transaction: {Blockchain.PendingTransactions.Count()}");
-                Blockchain.Mine(_miner);
-                Console.WriteLine(Blockchain.Blocks.Last());
+                _logger.LogInformation($"Pending transactions: {_blockchain.PendingTransactions.Count()}");
+                _watch.Restart();
+                _watch.Start();
+                var difficulty = GetDifficultyString(_blockchain.Difficulty);
+                var blockNumber = _blockchain.Blocks.Count() + 1;
+                _logger.LogInformation($"Mining block #{blockNumber} difficulty '{difficulty}'");
+                var minedBlock = _blockchain.Mine(_miner);
+                _watch.Stop();
+                var miningTime = _watch.ElapsedMilliseconds;
+                minedBlock.SetMiningTime(miningTime);
+                _logger.LogInformation($"Block #{blockNumber} nonce: {minedBlock.Nonce} " +
+                                       $"was mined by: {_miner.Name} " +
+                                       $"Completed in {miningTime} ms");
+                _logger.LogInformation(minedBlock.ToString());
                 await Task.Delay(5000);
-            }
-        }
-
-        private void ProcessTransactions()
-        {
-            while (_transactions.TryDequeue(out var transaction))
-            {
-                Blockchain.AddTransactions(transaction);
             }
         }
 
         public Task StopAsync()
         {
-            Console.WriteLine("Stopping Blockchain...");
+            _logger.LogInformation("Stopping Blockchain...");
             _isRunning = false;
 
             return Task.CompletedTask;
         }
 
-        public void CreateTransaction(Account sender, Account receiver, long amount)
+        public void CreateTransaction(string sender, string receiver, long amount)
         {
-            var data = sender.Address.Bytes.Union(receiver.Address.Bytes);
-            var signature = _signer.Sign(data, sender.PrivateKey);
-            var transaction = new Transaction(sender, receiver, amount, signature);
-            _transactions.Enqueue(transaction);
+            var senderAccount = _accountRepository.Get(sender);
+            var receiverAccount = _accountRepository.Get(receiver);
+            var transaction = _transactionService.Execute(senderAccount, receiverAccount, amount, _signer);
+            _blockchain.AddTransactions(transaction);
+            _logger.LogInformation($"Executed transaction from '{sender}' to '{receiver}' amount {amount}.");
         }
 
         public void SetDifficulty(int difficulty)
         {
-            Blockchain.SetDifficulty(difficulty);
+            _blockchain.SetDifficulty(difficulty);
         }
 
-        public int GetDifficulty() => Blockchain.Difficulty;
+        public int GetDifficulty() => _blockchain.Difficulty;
+
+        private static string GetDifficultyString(int difficulty)
+            => difficulty == 0
+                ? string.Empty
+                : Enumerable.Range(0, difficulty)
+                    .Select(_ => "0")
+                    .Aggregate((a, b) => $"{a}{b}");
     }
 }
     

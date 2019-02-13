@@ -1,11 +1,11 @@
 using System.Security.Cryptography;
 using System.Text;
 
-namespace Shackle.Core.Factories.Hash
+namespace Shackle.Core.Factories
 {
-    public class HashGenerator : IHashGenerator
+    public class HashFactory : IHashFactory
     {
-        public string Generate(string input)
+        public string Create(string input)
         {
             using (var sha256 = SHA256.Create())
             {

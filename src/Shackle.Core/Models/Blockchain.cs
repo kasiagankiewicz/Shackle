@@ -1,9 +1,8 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
-using Shackle.Core.Factories.Hash;
+using Shackle.Core.Factories;
 
 namespace Shackle.Core.Models
 {
@@ -12,26 +11,23 @@ namespace Shackle.Core.Models
         private readonly ISet<Block> _blocks = new HashSet<Block>();
         private readonly ConcurrentQueue<Transaction> _pendingTransactions = new ConcurrentQueue<Transaction>();
         private int _difficulty = 0;
-        private readonly IHashGenerator _hashGenerator;
-        private readonly IHashInputProvider _hashInputProvider;
-        private readonly Stopwatch _watch = new Stopwatch();
+        private readonly IHashFactory _hashFactory;
 
         public int Difficulty => _difficulty;
+        public Block CurrentBlock => _blocks.LastOrDefault();
         public IEnumerable<Block> Blocks => _blocks;
         public IEnumerable<Transaction> PendingTransactions => _pendingTransactions.ToArray();
 
-        public Blockchain(IHashGenerator hashGenerator, IHashInputProvider hashInputProvider)
+        public Blockchain(IHashFactory hashFactory)
         {
-            _hashGenerator = hashGenerator;
-            _hashInputProvider = hashInputProvider;
+            _hashFactory = hashFactory;
         }
 
         public void SetDifficulty(int difficulty)
         {
             if (_difficulty < 0)
             {
-                throw new ArgumentException($"Invalid difficulty {difficulty}",
-                    nameof(difficulty));
+                throw new ArgumentException($"Invalid difficulty {difficulty}", nameof(difficulty));
             }
 
             _difficulty = difficulty;
@@ -45,15 +41,13 @@ namespace Shackle.Core.Models
             }
 
             var blockData = BlockData.Genesis(DateTime.UtcNow, 0);
-            CreateNextBlock(blockData, GetHash(blockData), 0,string.Empty);
+            CreateNextBlock(blockData, GetHash(blockData), string.Empty);
         }
 
         public void AddTransactions(params Transaction[] transactions)
         {
             if (transactions == null || !transactions.Any())
             {
-                Console.WriteLine("No pending transactions.");
-
                 return;
             }
 
@@ -61,11 +55,9 @@ namespace Shackle.Core.Models
             {
                 _pendingTransactions.Enqueue(transaction);
             }
-
-            Console.WriteLine($"Added {transactions.Length} pending transactions.");
         }
 
-        public void Mine(Miner miner)
+        public Block Mine(Miner miner)
         {
             if (!_blocks.Any())
             {
@@ -74,62 +66,49 @@ namespace Shackle.Core.Models
 
             var previousBlock = _blocks.Last();
             var blockData = BlockData.Next(previousBlock, PendingTransactions, DateTime.UtcNow);
-            var (hash, miningTime) = Mine(blockData, miner);
-            CreateNextBlock(blockData, hash, miningTime, previousBlock.Hash);
-            ProcessPendingTransactions(miner);
+            var hash = Mine(blockData, miner);
+            var block = CreateNextBlock(blockData, hash, previousBlock.Hash);
+            ProcessPendingTransactions();
+
+            return block;
         }
 
-        private (string hash, long miningTime) Mine(BlockData blockData, Miner miner)
+        private string Mine(BlockData blockData, Miner miner)
         {
-            _watch.Restart();
-            _watch.Start();
-            var difficultyString = GetDifficultyString();
-            Console.WriteLine($"\tBlock: {blockData.Index} - difficulty string: {difficultyString}");
+            Console.WriteLine($"\tBlock: {blockData.Index} - difficulty string: {DifficultyString}");
             var hash = GetHash(blockData);
-            while (hash.Substring(0, Difficulty) != difficultyString)
+            while (hash.Substring(0, Difficulty) != DifficultyString)
             {
                 hash = GetHash(blockData);
-                blockData = blockData.IncrementNonce();
+                blockData.IncrementNonce();
             }
-            _watch.Stop();
 
-            Console.WriteLine($"\tBlock: {blockData.Index} - nonce: {blockData.Nonce} " +
-                              $"was mined by: {miner.Name} " + 
-                              $"Completed in {_watch.ElapsedMilliseconds} ms");
-
-            return (hash, _watch.ElapsedMilliseconds);
+            return hash;
         }
 
-        private void ProcessPendingTransactions(Miner miner)
+        private void ProcessPendingTransactions()
         {
             while (_pendingTransactions.TryDequeue(out _))
             {
             }
         }
 
-        private string GetDifficultyString()
+        private Block CreateNextBlock(BlockData blockData, string hash, string previousHash)
+        {
+            var block = Block.Create(blockData.Index, previousHash, hash,
+                blockData.Transactions, blockData.Timestamp, blockData.Nonce);
+            _blocks.Add(block);
+
+            return block;
+        }
+
+        private string GetHash(BlockData blockData) => _hashFactory.Create(blockData.GetHashData());
+
+        private string DifficultyString
             => Difficulty == 0
                 ? string.Empty
                 : Enumerable.Range(0, Difficulty)
                     .Select(_ => "0")
                     .Aggregate((a, b) => $"{a}{b}");
-
-        private void CreateNextBlock(BlockData blockData, string hash, long miningTime, string previousHash)
-        {
-            var block = Block.Create(blockData.Index, previousHash, hash,
-                blockData.Transactions, blockData.Timestamp, blockData.Nonce, miningTime);
-            _blocks.Add(block);
-        }
-
-        private string GetHash(BlockData blockData)
-            => _hashGenerator.Generate(_hashInputProvider.Create(blockData));
-
-        private static void ValidateData(string data)
-        {
-            if (string.IsNullOrWhiteSpace(data) || data.Length > 1000)
-            {
-                throw new ArgumentException("Invalid data.", nameof(data));
-            }
-        }
     }
 }

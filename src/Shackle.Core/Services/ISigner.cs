@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using Shackle.Core.Models;
 
-namespace Shackle.Services.Crypto
+namespace Shackle.Core.Services
 {
     public interface ISigner
     {
