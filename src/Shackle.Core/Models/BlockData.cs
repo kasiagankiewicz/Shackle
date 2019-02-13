@@ -10,7 +10,7 @@ namespace Shackle.Core.Models
         public string PreviousHash { get; }
         public IEnumerable<Transaction> Transactions { get; }
         public DateTime Timestamp { get; }
-        public int Nonce { get; private set; }
+        public int Nonce { get; }
 
         private BlockData(int index, string previousHash,
             IEnumerable<Transaction> transactions, DateTime timestamp, int nonce)
@@ -22,10 +22,8 @@ namespace Shackle.Core.Models
             Nonce = nonce;
         }
 
-        public void IncrementNonce()
-        {
-            Nonce++;
-        }
+        public BlockData IncrementNonce()
+            => new BlockData(Index, PreviousHash, Transactions, Timestamp, Nonce+1);
 
         public static BlockData Genesis(DateTime timestamp, int nonce)
             => new BlockData(0, string.Empty, Enumerable.Empty<Transaction>(), timestamp, nonce);

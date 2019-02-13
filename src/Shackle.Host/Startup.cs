@@ -5,8 +5,10 @@ using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
 using Shackle.Core.Factories;
 using Shackle.Core.Factories.Hash;
-using Shackle.Core.Services;
-using Shackle.Host.Framework;
+using Shackle.Infrastructure;
+using Shackle.Services.Accounts;
+using Shackle.Services.Blockchain;
+using Shackle.Services.Crypto;
 
 namespace Shackle.Host
 {
@@ -34,14 +36,7 @@ namespace Shackle.Host
                         .AllowAnyHeader()
                         .AllowCredentials());
             });
-            services.AddHostedService<BlockchainHostedService>();
-
-            services.AddSingleton<IBlockchainRunner, BlockchainRunner>();
-            services.AddSingleton<IHashGenerator, HashGenerator>();
-            services.AddSingleton<IAccountService, AccountService>();
-            services.AddSingleton<IHashInputProvider, HashInputProvider>();
-            services.AddSingleton<ICryptoFactory, CryptoFactory>();
-            services.AddSingleton<ISigner, Signer>();
+            services.AddShackle();
         }
 
         public void Configure(IApplicationBuilder app, IHostingEnvironment env)

@@ -89,7 +89,7 @@ namespace Shackle.Core.Models
             while (hash.Substring(0, Difficulty) != difficultyString)
             {
                 hash = GetHash(blockData);
-                blockData.IncrementNonce();
+                blockData = blockData.IncrementNonce();
             }
             _watch.Stop();
 

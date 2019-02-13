@@ -5,7 +5,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Shackle.Core\Shackle.Core.csproj" />
+    <ProjectReference Include="..\Shackle.Infrastructure\Shackle.Infrastructure.csproj" />
+    <ProjectReference Include="..\Shackle.Services\Shackle.Services.csproj" />
   </ItemGroup>
 
   <ItemGroup>
