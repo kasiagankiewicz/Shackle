@@ -17,7 +17,7 @@ namespace Shackle.Infrastructure
         public static IServiceCollection AddShackle(this IServiceCollection services)
         {
             services.AddSingleton<IBlockchainFactory, BlockchainFactory>();
-            services.AddSingleton<ICryptoFactory, CryptoFactory>();
+            services.AddSingleton<IAccountFactory, AccountFactory>();
             services.AddSingleton<IHashFactory, HashFactory>();
             services.AddSingleton<IAccountRepository, InMemoryAccountRepository>();
             services.AddSingleton<ISigner, Signer>();

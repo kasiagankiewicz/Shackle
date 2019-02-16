@@ -7,6 +7,6 @@ namespace Shackle.Services.Accounts
     {
         IEnumerable<AccountDto> GetAll();
         AccountDetailsDto Get(string name);
-        void Join(string name, long balance = 100);
+        void Add(string name, long balance = 100);
     }
 }

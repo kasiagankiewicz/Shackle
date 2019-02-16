@@ -9,13 +9,13 @@ namespace Shackle.Services.Accounts
 {
     public class AccountService : IAccountService
     {
-        private readonly ICryptoFactory _cryptoFactory;
+        private readonly IAccountFactory _accountFactory;
         private readonly IAccountRepository _accountRepository;
 
-        public AccountService(ICryptoFactory cryptoFactory,
+        public AccountService(IAccountFactory accountFactory,
             IAccountRepository accountRepository)
         {
-            _cryptoFactory = cryptoFactory;
+            _accountFactory = accountFactory;
             _accountRepository = accountRepository;
         }
 
@@ -28,7 +28,7 @@ namespace Shackle.Services.Accounts
             return account is null ? null : new AccountDetailsDto(account);
         }
 
-        public void Join(string name, long balance = 100)
+        public void Add(string name, long balance = 100)
         {
             var account = _accountRepository.Get(name);
             if (account != null)
@@ -37,8 +37,7 @@ namespace Shackle.Services.Accounts
 //                throw new ArgumentException($"Account with name {name} already exists.", nameof(name));
             }
 
-            var (privateKey, publicKey, address) = _cryptoFactory.Create();
-            account = new Account(name, privateKey, publicKey, address, balance);
+            account = _accountFactory.Create(name, balance);
             _accountRepository.Add(account);
         }
     }

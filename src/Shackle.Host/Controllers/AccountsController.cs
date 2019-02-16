@@ -36,7 +36,7 @@ namespace Shackle.Host.Controllers
         [HttpPost]
         public ActionResult Post(Join request)
         {
-            _accountService.Join(request.Name, request.Balance ?? 100);
+            _accountService.Add(request.Name, request.Balance ?? 100);
 
             return CreatedAtAction(nameof(Get), new {name = request.Name}, null);
         }
